@@ -4,6 +4,8 @@ import textwrap
 import google.generativeai as genai
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.style import Style
+from rich.style import Color
 from pathlib import Path
 
 exit_commands = ['/q', '\q', '/quit', '\quit', '/exit', '\exit']
@@ -13,7 +15,7 @@ def read_gemini_api_key():
     try:
         if 'GOOGLE_API_KEY' in os.environ:
             return os.environ['GOOGLE_API_KEY']
-        return Path('key.txt').read_text()
+        return Path('key.txt').read_text().strip()
     except:
         return None
 
@@ -22,9 +24,9 @@ if GOOGLE_API_KEY is None:
     print("The API Key is not defined")
     print("Export GOOGLE_API_KEY variable and try again")
     exit()
-
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-pro')
+chat = model.start_chat(history=[])
 console = Console()
 
 def to_markdown(text):
@@ -40,6 +42,10 @@ while True:
         os.system('clear')
         continue
     #response = model.generate_content(user_input, stream=True)
-    response = model.generate_content(user_input)
+    response = chat.send_message(user_input)
     for chunk in response:
-        console.print(to_markdown(chunk.text))
+        # text color doesn't change because in to_markdown it's converted from
+        # normal text to quote > text
+        #style = Style(color="white", bold=True)
+        style = Style(bgcolor="black", bold=True)
+        console.print(to_markdown(chunk.text), style=style)
